@@ -1,65 +1,72 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useState } from 'react'
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+import Header from '../components/header'
+import Layout from '../components/layout'
+import Formbox from '../components/form'
+import Items from '../components/items'
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+import { getRates } from './api/exchangeratesapi'
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+export default function Home(){
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+    const [ rates, setRates ] = useState(null)
+    const [ form, setForm ] = useState({
+        currency: '',
+        date: ''
+    })
+    const { currency, date } = form
+    const [ seach, setSearch ] = useState({
+        base: '',
+        date: ''
+    })
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+    const setCurrency = currency => {
+        setForm({
+            ...form,
+            currency
+        })
+    }
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+    const setDate = date => {
+        setForm({
+            ...form,
+            date
+        })
+    }
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+    const onSubmit = async () => {
+        const res = await getRates(form)
+        const json = await res.json()
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+        setRates(json.rates)
+        setSearch({
+            ...form,
+            base: json.base,
+            date: json.date
+        })
+    }
+
+    return(
+        <>
+            <Header>
+                <Layout>
+                    <Formbox
+                        currency={currency}
+                        date={date}
+
+                        setCurrency={setCurrency}
+                        setDate={setDate}
+                        onSubmit={onSubmit}
+                    />
+                </Layout>
+            </Header>
+            <Layout>
+                <Items 
+                    base={seach.base}
+                    date={seach.date}
+                    rates={rates}
+                />
+            </Layout>
+        </>
+    )
 }
